@@ -35,7 +35,6 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 	title := doc.Find("body .stickerData").First().Find(".title").Text()
 	stickers := make([]*YabelineSticker, len(imgs.Nodes))
 	var wg sync.WaitGroup
-
 	wg.Add(len(imgs.Nodes))
 	var mutex sync.Mutex
 	downloadImg := func(i int, node *goquery.Selection) {
