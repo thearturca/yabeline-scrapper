@@ -28,6 +28,7 @@ func StartBot(ctx context.Context, botToken string) {
 func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	if !strings.HasPrefix(update.Message.Text, "https://yabeline.tw/") {
 		b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "wrong url"})
+		return
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "scrabbing stickers"})
