@@ -20,7 +20,7 @@ func modifyUrlToHighResolution(url string) string {
 		return url
 	}
 
-	highResUrl := strings.Replace(url, "androis", "ios", -1)
+	highResUrl := strings.Replace(url, "android", "ios", -1)
 	indexOfDot := strings.LastIndex(highResUrl, ".")
 	return highResUrl[:indexOfDot] + "@2x" + highResUrl[indexOfDot:]
 
