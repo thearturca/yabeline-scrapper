@@ -17,8 +17,8 @@ jobs:
           script: |
             cd  tg/yabeline-scrapper # we move into our app's folder
             git pull # pull latest changes
-            go test
-            go build main.go # we install any missing dependencies
-            cp main /usr/local/bin/yabeline-scrapper/main # copy app build 
-            cp .env /usr/local/bin/yabeline-scrapper/.env # copy env file
+            /usr/local/go/bin/go test # run tests
+            /usr/local/go/bin/go build main.go # we install any missing dependencies
+            mv ./main /usr/local/bin/yabeline-scrapper/main # copy app build 
+            cp ./.env /usr/local/bin/yabeline-scrapper/.env # copy env file
             systemctl --user restart yabeline-scrapper.service 
