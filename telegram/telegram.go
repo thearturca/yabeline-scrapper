@@ -31,7 +31,7 @@ func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) 
 		return
 	}
 
-	b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "scrabbing stickers"})
+	b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "scrapping stickers. Please wait..."})
 	filename, images, err := yabeline.GetStickers(update.Message.Text)
 
 	if err != nil {
@@ -51,7 +51,7 @@ func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) 
 	for i, image := range images {
 		f, err := zipWriter.Create(fmt.Sprint(i+1) + image.FileExtension)
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
 			continue
 		}
 		_, err = f.Write(image.Data)
