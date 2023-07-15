@@ -1,0 +1,11 @@
+{
+   "version": "0.2.0",
+   "configurations": [
+       {
+           "type": "delve",
+           "request": "launch",
+           "name": "Debug delve",
+            "program": "main.go"
+       }
+   ]
+}
