@@ -3,13 +3,16 @@ package yabeline
 import (
 	"bytes"
 	"fmt"
+	"sync"
 
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
+var ffmpegMutex sync.Mutex
+
 func ConvertImage(image []byte) ([]byte, error) {
 	resultBuffer := new(bytes.Buffer)
-	err := ffmpeg.Input("pipe:", ffmpeg.KwArgs{
+	ffmpegStream := ffmpeg.Input("pipe:", ffmpeg.KwArgs{
 		// "f": format,
 	}).
 		// Filter("scale", ffmpeg.Args{"min'(512,iw)':min'(512,ih)"}).
@@ -22,8 +25,11 @@ func ConvertImage(image []byte) ([]byte, error) {
 		}).
 		ErrorToStdOut().
 		WithInput(bytes.NewBuffer(image)).
-		WithOutput(resultBuffer).
-		Run()
+		WithOutput(resultBuffer)
+
+	ffmpegMutex.Lock()
+	err := ffmpegStream.Run()
+	ffmpegMutex.Unlock()
 
 	if err != nil {
 		return nil, err
@@ -39,7 +45,7 @@ func ConvertImage(image []byte) ([]byte, error) {
 
 func ConvertApng(apng []byte) ([]byte, error) {
 	resultBuffer := new(bytes.Buffer)
-	err := ffmpeg.Input("-", ffmpeg.KwArgs{
+	ffmpegStream := ffmpeg.Input("-", ffmpeg.KwArgs{
 		"f": "apng",
 	}).
 		Output("-", ffmpeg.KwArgs{
@@ -52,12 +58,16 @@ func ConvertApng(apng []byte) ([]byte, error) {
 		}).
 		ErrorToStdOut().
 		WithInput(bytes.NewBuffer(apng)).
-		WithOutput(resultBuffer).
-		Run()
+		WithOutput(resultBuffer)
+
+	ffmpegMutex.Lock()
+	err := ffmpegStream.Run()
+	ffmpegMutex.Unlock()
 
 	if err != nil {
 		return nil, err
 	}
+
 	resBytes := resultBuffer.Bytes()
 	if len(resBytes) == 0 {
 		return nil, fmt.Errorf("Result buffer is empty")
