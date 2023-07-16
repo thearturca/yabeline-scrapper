@@ -3,6 +3,7 @@ package yabeline
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -20,20 +21,21 @@ func modifyUrlToHighResolution(url string) string {
 		return url
 	}
 
-	highResUrl := strings.Replace(url, "android", "ios", -1)
+	highResUrl := strings.ReplaceAll(url, "android", "ios")
 	indexOfDot := strings.LastIndex(highResUrl, ".")
 	return highResUrl[:indexOfDot] + "@2x" + highResUrl[indexOfDot:]
 
 }
 
-func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineSticker, error) {
+func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineSticker, bool, error) {
 	if doc == nil {
-		return "", nil, fmt.Errorf("No document to extract Stickers from")
+		return "", nil, false, fmt.Errorf("No document to extract Stickers from")
 	}
 
 	imgs := doc.Find("body .stickerBlock").Find("img")
 	title := doc.Find("body .stickerData").First().Find(".title").Text()
 	stickers := make([]*YabelineSticker, len(imgs.Nodes))
+	isTelegramReady := true
 	var wg sync.WaitGroup
 	wg.Add(len(imgs.Nodes))
 	var mutex sync.Mutex
@@ -42,6 +44,7 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 		var imgLink string
 		dataAnim, existsAnim := node.Attr("data-anim")
 		apng, existsApng := node.Attr("data-apng-src")
+		imgType := "static"
 
 		if !existsAnim && !existsApng {
 			src, srcExists := node.Attr("src")
@@ -52,8 +55,11 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 
 			imgLink = modifyUrlToHighResolution(src)
 		} else if existsAnim {
+			imgType = "apng"
 			imgLink = dataAnim
 		} else if existsApng {
+		} else if existsAnim {
+			imgType = "apng"
 			imgLink = apng
 		}
 
@@ -68,11 +74,34 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 		if err != nil {
 			return
 		}
+
 		lastDot := strings.LastIndex(imgLink, ".")
+		fileExtension := imgLink[lastDot:]
+		switch imgType {
+		case "apng":
+			convertedImage, err := ConvertApng(img)
+			if err != nil {
+				isTelegramReady = false
+				log.Println(err)
+				break
+			}
+			img = convertedImage
+			fileExtension = ".webm"
+		case "static":
+			fallthrough
+		default:
+			convertedImage, err := ConvertImage(img)
+			if err != nil {
+				isTelegramReady = false
+				log.Println(err)
+				break
+			}
+			img = convertedImage
+		}
 		mutex.Lock()
 		stickers[i] = &YabelineSticker{
 			Data:          img,
-			FileExtension: imgLink[lastDot:],
+			FileExtension: fileExtension,
 		}
 		mutex.Unlock()
 	}
@@ -80,28 +109,28 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 		go downloadImg(i, node)
 	})
 	wg.Wait()
-	return title, stickers, nil
+	return title, stickers, isTelegramReady, nil
 }
 
-func GetStickers(url string) (packName string, images []*YabelineSticker, err error) {
-	if !strings.HasPrefix(url, "https://yabeline.tw/Emoji_Data") {
-		return "", nil, fmt.Errorf("Invalid URL: %s", url)
+func GetStickers(url string) (packName string, images []*YabelineSticker, isTelegramReady bool, err error) {
+	if !strings.HasPrefix(url, "https://yabeline.tw/") {
+		return "", nil, false, fmt.Errorf("Invalid URL: %s", url)
 	}
 
 	res, err := http.Get(url)
 
 	if err != nil {
-		return "", nil, err
+		return "", nil, false, err
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return "", nil, fmt.Errorf("HTTP error: %d", res.StatusCode)
+		return "", nil, false, fmt.Errorf("HTTP error: %d", res.StatusCode)
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		return "", nil, err
+		return "", nil, false, err
 	}
 
 	return extractStickersFromHtmlNode(doc)

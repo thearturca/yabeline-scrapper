@@ -32,7 +32,7 @@ func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) 
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "scrapping stickers. Please wait..."})
-	filename, images, err := yabeline.GetStickers(update.Message.Text)
+	filename, images, isTelegramReady, err := yabeline.GetStickers(update.Message.Text)
 
 	if err != nil {
 		b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: fmt.Sprintf("error: %v", err)})
@@ -63,13 +63,18 @@ func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) 
 	}
 
 	zipWriter.Close()
+	caption := "Your stickers here. In that zip file. Go download it and be happy :)"
+
+	if isTelegramReady {
+		caption += "\n\nThey are telegram ready btw. You can use some frendly bot and create awesome sticker pack with that sitckers. I could do it myself, but I belive other bots will do it better. Good luck"
+	}
 	_, err = b.SendDocument(ctx, &bot.SendDocumentParams{
 		ChatID: update.Message.Chat.ID,
 		Document: &models.InputFileUpload{
 			Data:     archivedImages,
 			Filename: fmt.Sprintf("%s stickers.zip", filename),
 		},
-		Caption: "Your stickers here. In that zip file. Go download it and be happy :)",
+		Caption: caption,
 	})
 
 	if err != nil {
