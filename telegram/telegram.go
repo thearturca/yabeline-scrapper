@@ -32,7 +32,7 @@ func StartBot(ctx context.Context, botToken string) {
 		}
 		b.SendMessage(ctx, &bot.SendMessageParams{
 			ChatID:      update.Message.Chat.ID,
-			Text:        "Hello. please send me a sticker url from https://yabeline.tw",
+			Text:        "Hello, friend. Please send me a sticker url from https://yabeline.tw and I will download them for you.",
 			ReplyMarkup: keyboard,
 		})
 	})
