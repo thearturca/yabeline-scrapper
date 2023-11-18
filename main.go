@@ -15,7 +15,7 @@ func main() {
 	TG_TOKEN, exists := os.LookupEnv("TG_TOKEN")
 
 	if !exists {
-		panic("TG_TOKEN not found")
+		panic("env var TG_TOKEN not found")
 	}
 
 	log.Printf("Bot started")
