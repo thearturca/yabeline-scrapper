@@ -6,15 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"yabeline-tg/telegram"
-
-	"github.com/joho/godotenv"
 )
-
-func init() {
-	if err := godotenv.Load(); err != nil {
-		panic(err)
-	}
-}
 
 func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)

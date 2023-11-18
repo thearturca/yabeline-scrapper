@@ -21,7 +21,30 @@ func StartBot(ctx context.Context, botToken string) {
 		panic(err)
 	}
 
+	b.RegisterHandler(bot.HandlerTypeMessageText, "/start", bot.MatchTypePrefix, func(ctx context.Context, b *bot.Bot, update *models.Update) {
+		keyboard := &models.InlineKeyboardMarkup{
+			InlineKeyboard: [][]models.InlineKeyboardButton{
+				{{
+					URL:  "https://yabeline.tw",
+					Text: "yabeline.tw",
+				}},
+			},
+		}
+		b.SendMessage(ctx, &bot.SendMessageParams{
+			ChatID:      update.Message.Chat.ID,
+			Text:        "Hello. please send me a sticker url from https://yabeline.tw",
+			ReplyMarkup: keyboard,
+		})
+	})
 	b.RegisterHandler(bot.HandlerTypeMessageText, "https", bot.MatchTypePrefix, yabelineUrlHandler)
+	b.SetMyCommands(ctx, &bot.SetMyCommandsParams{
+		Commands: []models.BotCommand{
+			{
+				Command:     "/start",
+				Description: "start",
+			},
+		},
+	})
 	b.Start(ctx)
 }
 
@@ -39,7 +62,7 @@ func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) 
 		return
 	}
 
-	if len(images) == 0 {
+	if images == nil || len(images) == 0 {
 		b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "Images not found"})
 		return
 	}
@@ -49,6 +72,10 @@ func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) 
 	b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "zipping 4 you"})
 
 	for i, image := range images {
+		if image == nil {
+			continue
+		}
+
 		f, err := zipWriter.Create(fmt.Sprint(i+1) + image.FileExtension)
 		if err != nil {
 			log.Println(err)
