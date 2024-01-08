@@ -64,7 +64,7 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 			imgLink = modifyUrlToHighResolution(src)
 		} else if existsAnim {
 			imgType = "apng"
-			imgLink = dataAnim
+			imgLink = modifuApngUrlToHighResolution(dataAnim)
 		} else if existsApng {
 		} else if existsAnim {
 			imgType = "apng"
