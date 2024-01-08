@@ -27,6 +27,14 @@ func modifyUrlToHighResolution(url string) string {
 
 }
 
+func modifuApngUrlToHighResolution(url string) string {
+	if strings.Contains(url, "/IOS/") {
+		return strings.ReplaceAll(url, "IOS", "android")
+	}
+
+	return url
+}
+
 func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineSticker, bool, error) {
 	if doc == nil {
 		return "", nil, false, fmt.Errorf("No document to extract Stickers from")
@@ -60,10 +68,11 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 		} else if existsApng {
 		} else if existsAnim {
 			imgType = "apng"
-			imgLink = apng
+			imgLink = modifuApngUrlToHighResolution(apng)
 		}
 
 		res, err := http.Get(imgLink)
+
 		if err != nil {
 			return
 		}
