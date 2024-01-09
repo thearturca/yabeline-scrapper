@@ -6,7 +6,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"strings"
+	"time"
 	"yabeline-tg/yabeline"
 
 	"github.com/go-telegram/bot"
@@ -48,6 +50,36 @@ func StartBot(ctx context.Context, botToken string) {
 	b.Start(ctx)
 }
 
+var actions = [11]models.ChatAction{
+	models.ChatActionTyping,
+	models.ChatActionUploadPhoto,
+	models.ChatActionRecordVideo,
+	models.ChatActionUploadVideo,
+	models.ChatActionUploadDocument,
+	models.ChatActionFindLocation,
+	models.ChatActionRecordVideoNote,
+	models.ChatActionUploadVideoNote,
+	models.ChatActionRecordVoice,
+	models.ChatActionUploadVoice,
+	models.ChatActionChooseSticker,
+}
+
+func sendRandomChatAction(ctx context.Context, b *bot.Bot, update *models.Update, close chan any) {
+	for {
+
+		select {
+		case <-close:
+			return
+		default:
+			b.SendChatAction(ctx, &bot.SendChatActionParams{
+				ChatID: update.Message.Chat.ID,
+				Action: actions[rand.Intn(10)],
+			})
+			time.Sleep(5 * time.Second)
+		}
+	}
+}
+
 func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) {
 	if !strings.HasPrefix(update.Message.Text, "https://yabeline.tw/") {
 		b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "wrong url"})
@@ -55,7 +87,19 @@ func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) 
 	}
 
 	b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "scrapping stickers. Please wait..."})
+
+	// send random chat action
+	closeChan := make(chan any)
+	defer func() { closeChan <- true }()
+
+	go sendRandomChatAction(ctx, b, update, closeChan)
+
 	filename, images, isTelegramReady, err := yabeline.GetStickers(update.Message.Text)
+
+	b.SendChatAction(ctx, &bot.SendChatActionParams{
+		ChatID: update.Message.Chat.ID,
+		Action: models.ChatActionChooseSticker,
+	})
 
 	if err != nil {
 		b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: fmt.Sprintf("error: %v", err)})
@@ -95,6 +139,7 @@ func yabelineUrlHandler(ctx context.Context, b *bot.Bot, update *models.Update) 
 	if isTelegramReady {
 		caption += "\n\nThey are telegram ready btw. You can use some frendly bot and create awesome sticker pack with that sitckers. I could do it myself, but I belive other bots will do it better. Good luck"
 	}
+
 	_, err = b.SendDocument(ctx, &bot.SendDocumentParams{
 		ChatID: update.Message.Chat.ID,
 		Document: &models.InputFileUpload{
