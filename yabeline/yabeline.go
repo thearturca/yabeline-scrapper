@@ -127,8 +127,8 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 }
 
 func GetStickers(url string) (packName string, images []*YabelineSticker, isTelegramReady bool, err error) {
-	if !strings.HasPrefix(url, "https://yabeline.tw/") {
-		return "", nil, false, fmt.Errorf("Invalid URL: %s", url)
+	if !strings.HasPrefix(url, "https://yabeline.tw/Stickers_Data.php") {
+		return "", nil, false, fmt.Errorf("Invalid URL: %s\nExpected: https://yabeline.tw/Stickers_Data.php?Number=[id]", url)
 	}
 
 	res, err := http.Get(url)
