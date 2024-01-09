@@ -23,8 +23,8 @@ func modifyUrlToHighResolution(url string) string {
 
 	highResUrl := strings.ReplaceAll(url, "android", "ios")
 	indexOfDot := strings.LastIndex(highResUrl, ".")
-	return highResUrl[:indexOfDot] + "@2x" + highResUrl[indexOfDot:]
 
+	return highResUrl[:indexOfDot] + "@2x" + highResUrl[indexOfDot:]
 }
 
 func modifuApngUrlToHighResolution(url string) string {
@@ -40,7 +40,7 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 		return "", nil, false, fmt.Errorf("No document to extract Stickers from")
 	}
 
-	imgs := doc.Find("body .stickerBlock").Find("img")
+	imgs := doc.Find("body .stickerBlock").First().Find("img")
 	title := doc.Find("body .stickerData").First().Find(".title").Text()
 	stickers := make([]*YabelineSticker, len(imgs.Nodes))
 	isTelegramReady := true
@@ -66,7 +66,6 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 			imgType = "apng"
 			imgLink = modifuApngUrlToHighResolution(dataAnim)
 		} else if existsApng {
-		} else if existsAnim {
 			imgType = "apng"
 			imgLink = modifuApngUrlToHighResolution(apng)
 		}
@@ -86,14 +85,17 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 
 		lastDot := strings.LastIndex(imgLink, ".")
 		fileExtension := imgLink[lastDot:]
+
 		switch imgType {
 		case "apng":
 			convertedImage, err := ConvertApng(img)
+
 			if err != nil {
 				isTelegramReady = false
 				log.Println(err)
 				break
 			}
+
 			img = convertedImage
 			fileExtension = ".webm"
 		case "static":
@@ -105,6 +107,7 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 				log.Println(err)
 				break
 			}
+
 			img = convertedImage
 		}
 		mutex.Lock()
@@ -114,9 +117,11 @@ func extractStickersFromHtmlNode(doc *goquery.Document) (string, []*YabelineStic
 		}
 		mutex.Unlock()
 	}
+
 	imgs.Each(func(i int, node *goquery.Selection) {
 		go downloadImg(i, node)
 	})
+
 	wg.Wait()
 	return title, stickers, isTelegramReady, nil
 }
@@ -131,6 +136,7 @@ func GetStickers(url string) (packName string, images []*YabelineSticker, isTele
 	if err != nil {
 		return "", nil, false, err
 	}
+
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
@@ -138,6 +144,7 @@ func GetStickers(url string) (packName string, images []*YabelineSticker, isTele
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
+
 	if err != nil {
 		return "", nil, false, err
 	}
