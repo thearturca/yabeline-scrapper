@@ -23,7 +23,6 @@ func ConvertImage(image []byte) ([]byte, error) {
 			"pix_fmt":  "rgba",
 			"f":        "image2",
 		}).
-		ErrorToStdOut().
 		WithInput(bytes.NewBuffer(image)).
 		WithOutput(resultBuffer)
 
@@ -56,7 +55,6 @@ func ConvertApng(apng []byte) ([]byte, error) {
 			"f":         "webm",
 			"pix_fmt":   "yuva420p",
 		}).
-		ErrorToStdOut().
 		WithInput(bytes.NewBuffer(apng)).
 		WithOutput(resultBuffer)
 
