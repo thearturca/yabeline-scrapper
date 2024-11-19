@@ -51,7 +51,7 @@ func ConvertApng(apng []byte) ([]byte, error) {
 			"framerate": "30",
 			"c:v":       "libvpx-vp9",
 			"an":        "",
-			"vf":        "scale='min(512,iw)':'min(512,ih)':force_original_aspect_ratio=decrease,format=rgba,pad=512:'min(512, ih)':-1:-1:color=0x00000000",
+			"vf":        "scale=-1:420,scale=min'(512,iw)':min'(512,ih)':force_original_aspect_ratio=decrease,format=rgba,pad='max(512, iw)':'max(512,ih)':-1:-1:color=0x00000000",
 			"f":         "webm",
 			"pix_fmt":   "yuva420p",
 		}).
