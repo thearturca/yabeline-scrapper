@@ -4,7 +4,7 @@ go 1.23
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
-	github.com/go-telegram/bot v0.7.13
+	github.com/go-telegram/bot v1.15.0
 	github.com/u2takey/ffmpeg-go v0.4.1
 )
 
