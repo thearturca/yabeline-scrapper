@@ -84,6 +84,7 @@ func StartBot(ctx context.Context, botToken string) {
 
 		archivedImages := new(bytes.Buffer)
 		zipWriter := zip.NewWriter(archivedImages)
+		b.SendMessage(ctx, &bot.SendMessageParams{ChatID: update.Message.Chat.ID, Text: "converting stickers. Please wait..."})
 
 		for _, f := range zipFile.File {
 			if f.FileInfo().IsDir() {
@@ -155,7 +156,7 @@ func StartBot(ctx context.Context, botToken string) {
 
 		b.SendDocument(ctx, &bot.SendDocumentParams{
 			ChatID:  update.Message.Chat.ID,
-			Caption: "Images converted",
+			Caption: "Stickers converted",
 			Document: &models.InputFileUpload{
 				Data:     archivedImages,
 				Filename: fmt.Sprintf("%s_converted.zip", update.Message.Document.FileName[0:strings.LastIndex(update.Message.Document.FileName, ".")]),
