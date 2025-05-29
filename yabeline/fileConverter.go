@@ -18,7 +18,7 @@ func ConvertImage(image []byte) ([]byte, error) {
 		// Filter("scale", ffmpeg.Args{"min'(512,iw)':min'(512,ih)"}).
 		Output("pipe:", ffmpeg.KwArgs{
 			"c:v":      "png",
-			"vf":       "scale=512:min'(512,ih)':force_original_aspect_ratio=decrease",
+			"vf":       "scale=512:ih:force_original_aspect_ratio=decrease,format=rgba,pad='max(512, iw)':'min(512,ih)':-1:-1:color=0x00000000",
 			"frames:v": "1",
 			"pix_fmt":  "rgba",
 			"f":        "image2",
